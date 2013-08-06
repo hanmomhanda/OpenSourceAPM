@@ -6,6 +6,7 @@
   <link href="examples.css" rel="stylesheet" type="text/css">
   <script language="javascript" type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>  
+  <script language="javascript" type="text/javascript" src="jquery.flot.time.js"></script>  
   <script language="javascript" type="text/javascript">
   
   //window.addEventListener("load", init, false);
@@ -16,19 +17,28 @@
 	    // We use an inline data source in the example, usually data would
 		// be fetched from a server
 
-		var data = [],
-			totalPoints = 200;
+		var _gData = [],
+			totalPoints = 20;
   
-	  var wsUri = "ws://localhost:18001/chart";
+	  var wsUri = "ws://localhost:18001/jsonChart";
 	  var output;
+	  var timer;
 	  
 	  init();
 	  
 	  function init() {
-		output = document.getElementById("output");
+		output = document.getElementById("output");		
+		
 		for ( var i = 0 ; i < totalPoints ; i++ ) {
-		  data[i] = 0;
+		  var t = new Date().getTime();
+		  console.log(t);
+		  _gData[i] = { 
+		                label: "", 
+		                data: [t, 0],
+                        hoverable: true
+					  };
 		}
+		
 		testWebSocket(); 
 	  }
 	  
@@ -68,28 +78,45 @@
 		//console.log(evt.data);
 	  } 
 
-	  function addMsgToData(chartData) {
-		var num = Number(chartData);
+	  function addMsgToData(jsonData) {
+	    var jsonData = JSON.parse(jsonData);
+		var targetURL = jsonData.targetURL;
+		var timeStamp = jsonData.timeStamp;
+		var responseTime = jsonData.responseTime;
+		//var num = Number(chartData);
 		
-		if ( data.length === totalPoints ) {
-		  console.log("before slice : " + data.length );
-		  data = data.slice(1);		  
-		  console.log("after slice  : " + data.length );
+		
+//		console.log(targetURL);
+//		console.log(timeStamp);
+//		console.log(responseTime);
+		
+		
+		if ( _gData.length === totalPoints ) {
+//		  console.log("before slice : " + _gData.length );
+		  _gData = _gData.slice(1);		  
+//		  console.log("after slice  : " + _gData.length );
 		}
-		data.push(num);
 		
-		console.log(data[totalPoints-1]);
+		var chartData = { label: targetURL, 
+		                  data: [timeStamp, responseTime],
+                          hoverable: true
+						};
+		_gData.push(chartData);
+		
+//		console.log(_gData[totalPoints-1]);
 	  }
 	  
 	  function getChartData() {
-	    res = [];
+	    var res = [];
 	    for ( var i = 0 ; i < totalPoints ; i++ ) {
-		  res.push([i, data[i]]);
+		  if ( typeof _gData[i] !== 'undefined' ) {
+		    console.log("data being added : " + _gData[i].label + ", " + 
+			                                    _gData[i].data);
+		    res.push(_gData[i]);
+		  }
 		}
 		return res;
-	  }
-		
-		
+	  }		
 	  
 	  function onError(evt) { 
 		writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
@@ -102,7 +129,7 @@
 		output.appendChild(pre);	
 	  }
 
-		var updateInterval = 1
+		var updateInterval = 1000;
 		;
 		$("#updateInterval").val(updateInterval).change(function () {
 			var v = $(this).val();
@@ -117,27 +144,29 @@
 			}
 		});
 
-		var plot = $.plot("#placeholder", [ { data : getChartData(), points : { show : true } } ], {
+		var plot = $.plot("#placeholder", [ getChartData() ], {
 			series: {
 				shadowSize: 0	// Drawing is faster without shadows
 			},
 			yaxis: {
 				min: 0,
-				max: 100
+				max: 10
 			},
 			xaxis: {
-				show: true
+				show: true,
+				mode: "time",
+				timeformat: "%Y/%m/%d"
 			}
 		});
 
 		function update() {
 
-			plot.setData([getChartData()]);
+			plot.setData( [ getChartData() ]);
 
 			// Since the axes don't change, we don't need to call plot.setupGrid()
 
 			plot.draw();
-			setTimeout(update, updateInterval);
+			timer = setTimeout(update, updateInterval);
 		}
 
 		update();

@@ -179,7 +179,93 @@ public class WebSocketServer extends Verticle {
 						
 					});
 					
+			    } else if (ws.path().equals("/jsonData")) { //$NON-NLS-1$
+					System.out.println("Verticle for " + ws.textHandlerID() + " : " + currentVerticle); //$NON-NLS-1$ //$NON-NLS-2$
+					System.out.println("[in ServerWebSocketHander]ws : " + ws); //$NON-NLS-1$
+					System.out.println("[in ServerWebSocketHander]ws.path : " + ws.path()); //$NON-NLS-1$
+					
+					/**
+					 * Websocket으로 데이터 수신 시 처리 핸들러
+					 */
+					ws.dataHandler(new Handler<Buffer>() {
+						
+						public void handle(Buffer data) {
+							
+							// 모든 웹소켓에 반복
+							for ( String actorID : connections ) {
+								System.out.println("[in ServerWebSocketHander.bufferHandler]--------"); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]ws: " + ws); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]data from client: " + data); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]actorID : " + actorID); //$NON-NLS-1$
+								
+								// 웹소켓 커넥션에 정보 발송
+								eb.publish(actorID, data.toString());
+							}
+
+							System.out.println("[in ServerWebSocketHander.bufferHandler]connections : " + connections.size()); //$NON-NLS-1$
+			            }
+			        });					
+					
+					/**
+					 * WebSocket 정상 종료 시 핸들러
+					 * Client Browser 종료 시 여기를 탄다.
+					 */
+					ws.endHandler(new Handler<Void>() {
+
+						@Override
+						public void handle(Void arg0) {
+							System.out.println("[in ServerWebSocketHander.endHandler]Connection ends : " + ws.textHandlerID()); //$NON-NLS-1$
+							if (connections.remove(ws.textHandlerID())) {
+								System.out.println("[in ServerWebSocketHander.endHandler]Connection size : " + connections.size());	 //$NON-NLS-1$
+							}							
+						}
+						
+					});
+					
 			    } else if (ws.path().equals("/chart")) { //$NON-NLS-1$
+					System.out.println("Verticle for " + ws.textHandlerID() + " : " + currentVerticle); //$NON-NLS-1$ //$NON-NLS-2$
+					System.out.println("[in ServerWebSocketHander]ws : " + ws); //$NON-NLS-1$
+					System.out.println("[in ServerWebSocketHander]ws.path : " + ws.path()); //$NON-NLS-1$
+					
+					/**
+					 * Websocket으로 데이터 수신 시 처리 핸들러
+					 */
+					ws.dataHandler(new Handler<Buffer>() {
+						
+						public void handle(Buffer data) {
+							
+							// 모든 웹소켓에 반복
+							for ( String actorID : connections ) {
+								System.out.println("[in ServerWebSocketHander.bufferHandler]--------"); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]ws: " + ws); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]data from client: " + data); //$NON-NLS-1$
+								System.out.println("[in ServerWebSocketHander.bufferHandler]actorID : " + actorID); //$NON-NLS-1$
+								
+								// 웹소켓 커넥션에 정보 발송
+//								eb.publish(actorID, data.toString());
+							}
+
+							System.out.println("[in ServerWebSocketHander.bufferHandler]connections : " + connections.size()); //$NON-NLS-1$
+			            }
+			        });					
+					
+					/**
+					 * WebSocket 정상 종료 시 핸들러
+					 * Client Browser 종료 시 여기를 탄다.
+					 */
+					ws.endHandler(new Handler<Void>() {
+
+						@Override
+						public void handle(Void arg0) {
+							System.out.println("[in ServerWebSocketHander.endHandler]Connection ends : " + ws.textHandlerID()); //$NON-NLS-1$
+							if (connections.remove(ws.textHandlerID())) {
+								System.out.println("[in ServerWebSocketHander.endHandler]Connection size : " + connections.size());	 //$NON-NLS-1$
+							}							
+						}
+						
+					});
+					
+			    } else if (ws.path().equals("/jsonChart")) { //$NON-NLS-1$
 					System.out.println("Verticle for " + ws.textHandlerID() + " : " + currentVerticle); //$NON-NLS-1$ //$NON-NLS-2$
 					System.out.println("[in ServerWebSocketHander]ws : " + ws); //$NON-NLS-1$
 					System.out.println("[in ServerWebSocketHander]ws.path : " + ws.path()); //$NON-NLS-1$
@@ -253,6 +339,10 @@ public class WebSocketServer extends Verticle {
 		        	req.response().sendFile(appRoot + "/flotchart.html"); //$NON-NLS-1$
 		        } else if (req.path().equals("/shit")) { //$NON-NLS-1$
 		        	req.response().sendFile(appRoot + "/shit.html"); //$NON-NLS-1$
+		        } else if (req.path().equals("/jsonData")) { //$NON-NLS-1$
+		        	req.response().sendFile(appRoot + "/json-provider.html"); //$NON-NLS-1$
+		        } else if (req.path().equals("/jsonChart")) { //$NON-NLS-1$
+		        	req.response().sendFile(appRoot + "/flotchart-json.html"); //$NON-NLS-1$
 		        } else {
 		        	req.response().sendFile(appRoot + req.path());
 		        }

@@ -1,0 +1,124 @@
+<!DOCTYPE html>  
+<meta charset="utf-8" />
+  <title>WebSocket Test</title>
+  <script language="javascript" type="text/javascript">
+  var wsUri = "ws://localhost:18001/jsonData";
+  var output,
+      websocket,
+	  sendTimer,
+	  lastRandomNumber;
+  
+  function init() {
+    output = document.getElementById("output");
+	testWebSocket(); 
+  }
+  
+  function testWebSocket() {
+    websocket = new WebSocket(wsUri);
+	websocket.onopen = function(evt) {
+                         onOpen(evt) 
+					   }; 					 
+	websocket.onclose = function(evt) {
+                          onClose(evt) 
+						}; 
+	websocket.onmessage = function(evt) {
+                            onMessage(evt) 
+						};
+	websocket.onerror = function(evt) {
+                            onError(evt) 
+						}; 
+  } 
+  
+  function sendData() {
+    doSend(makeData(Math.random().toString(36).slice(2), new Date().getTime()));
+    sendTimer = setInterval( function() { doSend(makeData(Math.random().toString(36).slice(2), new Date().getTime())); }, 100 );
+  }
+
+  function makeData(pTargetURL, pTimeStamp) {
+    var jsonObj = { targetURL: pTargetURL,
+                    timeStamp: pTimeStamp,
+                    responseTime: Math.random()*5 
+    };
+    return jsonObj;
+  } 
+  
+  function getRandom() {
+  /*
+    var prev = lastRandomNumber > 0 ? lastRandomNumber : 50,
+	    lastRandomNumber = prev;
+					y = prev + Math.random() * 10;
+  */
+  var y = Math.random()*100;
+
+	if (y < 0) {
+		y = 0;
+	} else if (y > 100) {
+		y = 100;
+	}
+	
+	return y;
+  }
+  
+  function onOpen(evt) { 
+    writeToScreen("CONNECTED");
+    sendData();  
+  }
+  
+  // Push 서버가 다운될 경우 여기서 다른 Push 서버로 다시 HTTP 요청을 통해 Websocket연결
+  // 다른 Push 서버에 요청이 동시에 몰리지 않도록 난수등을 통해 요청 배분 로직 필요
+  function onClose(evt) {
+    writeToScreen("DISCONNECTED"); 
+  }  
+  
+  function onMessage(evt) {
+	var milsec = new Date().getTime();
+    writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'@'+milsec+'</span>'); 
+    //alert(evt.data);
+	//websocket.close(); 
+  }  
+  
+  function onError(evt) { 
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }  
+  
+  function doSend(message) { 
+    if (!window.WebSocket) {
+        alert("window.WebSocket is INOP");
+        return;
+    }
+    if (websocket.readyState == WebSocket.OPEN) {
+        var sentData = JSON.stringify(message);
+        websocket.send(sentData);
+        writeToScreen("SENT: " + sentData);
+    } else {
+        alert("The socket is not open.");
+    }
+  }  
+  
+  function writeToScreen(message) {
+    var pre = document.createElement("p"); 
+	pre.style.wordWrap = "break-word"; 
+	pre.innerHTML = message;	
+	output.appendChild(pre);	
+  }  
+  
+  function stopSending() {
+    clearInterval(sendTimer);
+  }
+
+  function clearResult() {
+    output.innerHTML = "";
+  }
+  
+  window.addEventListener("load", init, false);  
+  </script>
+  <h2>WebSocket Test</h2>
+  <body>
+	  <form>
+		<input type='button' value='Stop Sending' onclick='stopSending()'/>
+		<input type='button' value='resume Sending' onclick='sendData()'/>
+		<input type='button' value='clear Result' onclick='clearResult()'/>
+	  </form>
+	  <div id="output"></div>
+  </body>
+</html>
