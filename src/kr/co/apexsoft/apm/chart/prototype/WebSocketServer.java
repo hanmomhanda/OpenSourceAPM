@@ -329,7 +329,7 @@ public class WebSocketServer extends Verticle {
 	        	System.out.println("req uri : " + req.uri());
 	        	System.out.println("req method : " + req.method());
 	        	
-	        	String appRoot = "./kr/co/apexsoft/apm/chart/prototype";
+	        	String appRoot = "../src/kr/co/apexsoft/apm/chart/prototype";
 				
 	        	if (req.path().equals("/")) { //$NON-NLS-1$
 		        	req.response().sendFile(appRoot + "/websocket-test.html"); //$NON-NLS-1$
