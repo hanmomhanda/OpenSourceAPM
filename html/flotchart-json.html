@@ -5,8 +5,8 @@
   
   <link href="examples.css" rel="stylesheet" type="text/css">
   <script language="javascript" type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-  <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>  
-  <script language="javascript" type="text/javascript" src="jquery.flot.time.js"></script>  
+  <script language="javascript" type="text/javascript" src="../lib/flotcharts/jquery.flot.js"></script>  
+  <script language="javascript" type="text/javascript" src="../lib/flotcharts/jquery.flot.time.js"></script>  
   <script language="javascript" type="text/javascript">
   
   //window.addEventListener("load", init, false);
@@ -29,19 +29,22 @@
 	  function init() {
 		output = document.getElementById("output");		
 		
-		for ( var i = 0 ; i < totalPoints ; i++ ) {
-		  var t = new Date().getTime();
-		  console.log(t);
-		  _gData[i] = { 
-		                label: "", 
-		                data: [t, 0],
-                        hoverable: true
-					  };
-		}
-		
+        setInitialData();
 		testWebSocket(); 
 	  }
 	  
+      function setInitialData() {
+		for ( var i = 0 ; i < totalPoints ; i++ ) {
+		  var t = new Date().getTime();
+		  _gData[i] = { 
+		                label: "", 
+		                data: [(t - 1000 * (totalPoints - i)), 0],
+                        hoverable: true
+					  };
+		  console.log(_gData[i]);
+		}
+      } 
+
 	  function testWebSocket() {
 		websocket = new WebSocket(wsUri);
 		websocket.onopen = function(evt) {
@@ -97,13 +100,14 @@
 //		  console.log("after slice  : " + _gData.length );
 		}
 		
-		var chartData = { label: targetURL, 
+        var chartData = { 
+                          label: targetURL, 
 		                  data: [timeStamp, responseTime],
                           hoverable: true
 						};
 		_gData.push(chartData);
 		
-//		console.log(_gData[totalPoints-1]);
+		console.dir(_gData);
 	  }
 	  
 	  function getChartData() {
@@ -144,7 +148,7 @@
 			}
 		});
 
-		var plot = $.plot("#placeholder", [ getChartData() ], {
+		var plot = $.plot("#placeholder", [ _gData ], {
 			series: {
 				shadowSize: 0	// Drawing is faster without shadows
 			},
@@ -161,7 +165,7 @@
 
 		function update() {
 
-			plot.setData( [ getChartData() ]);
+			plot.setData( [ _gData ]);
 
 			// Since the axes don't change, we don't need to call plot.setupGrid()
 
